@@ -80,6 +80,7 @@ if __name__ == "__main__":
     
     X_test = [sent2features(s) for s in test_sents]
     y_test = [sent2labels(s) for s in test_sents]
+    exit()
     crf = sklearn_crfsuite.CRF(algorithm='lbfgs', c1=0.1, c2=0.1, max_iterations=100, all_possible_transitions=True)
     crf.fit(X_train, y_train)
     
