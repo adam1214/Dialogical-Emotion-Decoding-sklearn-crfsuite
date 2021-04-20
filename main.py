@@ -14,15 +14,23 @@ from sklearn.model_selection import RandomizedSearchCV
 import sklearn_crfsuite
 from sklearn_crfsuite import scorers
 from sklearn_crfsuite import metrics
+from collections import Counter
 
 import utils
 
 plt.style.use('ggplot')\
 
+def print_state_features(state_features):
+    for (attr, label), weight in state_features:
+        print("%0.6f %-8s %s" % (weight, label, attr))
+
+def print_transitions(trans_features):
+    for (label_from, label_to), weight in trans_features:
+        print("%-6s -> %-7s %0.6f" % (label_from, label_to, weight))
+        
 def utt2features(dialog, i):
     
     features = {
-        
         'a2a':0.,
         'a2h':0.,
         'a2n':0.,
@@ -88,6 +96,14 @@ def utt2features(dialog, i):
         features['pretrained_n'] = out_dict[dialog[i][0]][2]
     elif out_max_index == 3:
         features['pretrained_s'] = out_dict[dialog[i][0]][3]
+    '''
+    '''
+    features = {        
+        'pretrained_a':out_dict[dialog[i][0]][0],
+        'pretrained_h':out_dict[dialog[i][0]][1],
+        'pretrained_n':out_dict[dialog[i][0]][2],
+        'pretrained_s':out_dict[dialog[i][0]][3]
+    }
     '''
     return features
 
@@ -183,7 +199,7 @@ if __name__ == "__main__":
 
     predict = []
     
-    crf = sklearn_crfsuite.CRF(algorithm='lbfgs', c1=0.1, c2=0.1, max_iterations=100, all_possible_transitions=True)
+    crf = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=0.1, max_iterations=100)
     crf.fit(X1_train, y1_train)
     y1_pred = crf.predict(X1_test)
     for sub_list in y1_pred:
@@ -232,3 +248,10 @@ if __name__ == "__main__":
     print('UAR:', uar)
     print('ACC:', acc)
     print(conf)
+    print('===================================================') 
+    print("Top likely transitions:") # transition feature coefficients {(label_from, label_to) -- coef}
+    print_transitions(Counter(crf.transition_features_).most_common(len(crf.transition_features_)))
+    print('===================================================')
+    print("Top positive:") # state feature coefficients {(attr_name, label) -- coef}
+    print_state_features(Counter(crf.state_features_).most_common(len(crf.state_features_)))
+    
