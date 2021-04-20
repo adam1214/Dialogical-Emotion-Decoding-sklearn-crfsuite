@@ -40,6 +40,7 @@ def utt2features(dialog, i):
     }
     
     return features
+
 def dialog2features(dialog):
     return [utt2features(dialog, i) for i in range(len(dialog))]
 
@@ -93,7 +94,8 @@ def construct_train_test(emo_dict, dialogs_edit):
     train_dialogs5 = Ses01_list + Ses02_list + Ses03_list + Ses04_list
     test_dialogs5 = Ses05_list
 
-    return train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5, Ses01_list, Ses02_list, Ses03_list, Ses04_list, Ses05_list
+    return train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5
+
 if __name__ == "__main__":
     emo_mapping_dict = {'ang':'a', 'hap':'h', 'neu':'n', 'sad':'s', 'Start':'Start', 'End':'End', 'pre-trained':'p', 0:'ang', 1:'hap', 2:'neu', 3:'sad'}
     emo_dict = joblib.load('data/emo_all_iemocap.pkl')
@@ -103,7 +105,7 @@ if __name__ == "__main__":
 
     intra_emo_trans_prob_dict = utils.get_val_emo_trans_prob(emo_dict, dialogs_edit)
 
-    train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5, Ses01_list, Ses02_list, Ses03_list, Ses04_list, Ses05_list = construct_train_test(emo_dict, dialogs_edit)
+    train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5 = construct_train_test(emo_dict, dialogs_edit)
 
     X1_train = [dialog2features(s) for s in train_dialogs1]
     X2_train = [dialog2features(s) for s in train_dialogs2]
@@ -117,17 +119,17 @@ if __name__ == "__main__":
     y4_train = [dialog2labels(s) for s in train_dialogs4]
     y5_train = [dialog2labels(s) for s in train_dialogs5]
 
-    X1_test = [dialog2features(s) for s in Ses01_list]
-    X2_test = [dialog2features(s) for s in Ses02_list]
-    X3_test = [dialog2features(s) for s in Ses03_list]
-    X4_test = [dialog2features(s) for s in Ses04_list]
-    X5_test = [dialog2features(s) for s in Ses05_list]
+    X1_test = [dialog2features(s) for s in test_dialogs1]
+    X2_test = [dialog2features(s) for s in test_dialogs2]
+    X3_test = [dialog2features(s) for s in test_dialogs3]
+    X4_test = [dialog2features(s) for s in test_dialogs4]
+    X5_test = [dialog2features(s) for s in test_dialogs5]
 
-    y1_test = [dialog2labels(s) for s in Ses01_list]
-    y2_test = [dialog2labels(s) for s in Ses02_list]
-    y3_test = [dialog2labels(s) for s in Ses03_list]
-    y4_test = [dialog2labels(s) for s in Ses04_list]
-    y5_test = [dialog2labels(s) for s in Ses05_list]
+    y1_test = [dialog2labels(s) for s in test_dialogs1]
+    y2_test = [dialog2labels(s) for s in test_dialogs2]
+    y3_test = [dialog2labels(s) for s in test_dialogs3]
+    y4_test = [dialog2labels(s) for s in test_dialogs4]
+    y5_test = [dialog2labels(s) for s in test_dialogs5]
 
     predict = []
     
@@ -138,28 +140,24 @@ if __name__ == "__main__":
         predict += sub_list
     joblib.dump(crf, 'model/Ses01.sav')
 
-    crf = sklearn_crfsuite.CRF(algorithm='lbfgs', c1=0.1, c2=0.1, max_iterations=100, all_possible_transitions=True)
     crf.fit(X2_train, y2_train)
     y2_pred = crf.predict(X2_test)
     for sub_list in y2_pred:
         predict += sub_list
     joblib.dump(crf, 'model/Ses02.sav')
 
-    crf = sklearn_crfsuite.CRF(algorithm='lbfgs', c1=0.1, c2=0.1, max_iterations=100, all_possible_transitions=True)
     crf.fit(X3_train, y3_train)
     y3_pred = crf.predict(X3_test)
     for sub_list in y3_pred:
         predict += sub_list
     joblib.dump(crf, 'model/Ses03.sav')
 
-    crf = sklearn_crfsuite.CRF(algorithm='lbfgs', c1=0.1, c2=0.1, max_iterations=100, all_possible_transitions=True)
     crf.fit(X4_train, y4_train)
     y4_pred = crf.predict(X4_test)
     for sub_list in y4_pred:
         predict += sub_list
     joblib.dump(crf, 'model/Ses04.sav')
 
-    crf = sklearn_crfsuite.CRF(algorithm='lbfgs', c1=0.1, c2=0.1, max_iterations=100, all_possible_transitions=True)
     crf.fit(X5_train, y5_train)
     y5_pred = crf.predict(X5_test)
     for sub_list in y5_pred:
