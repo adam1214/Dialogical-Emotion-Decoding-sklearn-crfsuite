@@ -20,25 +20,75 @@ import utils
 plt.style.use('ggplot')\
 
 def utt2features(dialog, i):
+    
+    features = {
+        
+        'a2a':0.,
+        'a2h':0.,
+        'a2n':0.,
+        'a2s':0.,
+
+        'h2a':0.,
+        'h2h':0.,
+        'h2n':0.,
+        'h2s':0.,
+
+        'n2a':0.,
+        'n2h':0.,
+        'n2n':0.,
+        'n2s':0.,
+
+        's2a':0.,
+        's2h':0.,
+        's2n':0.,
+        's2s':0.,
+
+        'Start2a':0.,
+        'Start2h':0.,
+        'Start2n':0.,
+        'Start2s':0.,
+        
+        'pretrained_a':out_dict[dialog[i][0]][0],
+        'pretrained_h':out_dict[dialog[i][0]][1],
+        'pretrained_n':out_dict[dialog[i][0]][2],
+        'pretrained_s':out_dict[dialog[i][0]][3]
+    }
+
     current_ses = dialog[i][0][:5] #Ses01
     current_spk = dialog[i][1]
     current_emo = dialog[i][2]
     previous_emo = ""
-
-    # find this speaker's emotion in this dialog
+    
+    # find this speaker's previous emotion in this dialog
     for index in range(i, -1, -1):
         previous_spk = dialog[index][1]
         if previous_spk == current_spk:
             previous_emo = dialog[index][2]
             break
+    
     if previous_emo == "":
         previous_emo = "Start"
-    features = {
-        'emo_transition_prob_intra': intra_emo_trans_prob_dict[current_ses][emo_mapping_dict[previous_emo] + '2' + emo_mapping_dict[current_emo]],
-        'pre-trained classifier predicted emo': emo_mapping_dict[np.argmax(out_dict[dialog[i][0]])],
-        'pre-trained classifier predicted emo val': np.max(out_dict[dialog[i][0]])
-    }
     
+    '''
+    # find the emotion of the previous utt
+    if i-1 >= 0:
+        previous_emo = dialog[i-1][2]
+    else:
+        previous_emo = "Start"
+    '''
+    features[emo_mapping_dict[previous_emo] + '2' + emo_mapping_dict[current_emo]] = intra_emo_trans_prob_dict[current_ses][emo_mapping_dict[previous_emo] + '2' + emo_mapping_dict[current_emo]]
+    
+    '''
+    out_max_index = np.argmax(out_dict[dialog[i][0]])
+    if out_max_index == 0:
+        features['pretrained_a'] = out_dict[dialog[i][0]][0]
+    elif out_max_index == 1:
+        features['pretrained_h'] = out_dict[dialog[i][0]][1]
+    elif out_max_index == 2:
+        features['pretrained_n'] = out_dict[dialog[i][0]][2]
+    elif out_max_index == 3:
+        features['pretrained_s'] = out_dict[dialog[i][0]][3]
+    '''
     return features
 
 def dialog2features(dialog):
