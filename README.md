@@ -1,7 +1,19 @@
 # Dialogical-Emotion-Decoding-sklearn-crfsuite
+## Intro.
 * Implement by a python package [sklearn-crfsuite](https://sklearn-crfsuite.readthedocs.io/en/latest/index.html)
     * Construct a NER system：[Example code](https://github.com/TeamHG-Memex/sklearn-crfsuite/blob/master/docs/CoNLL2002.ipynb)
 * Using dataset：IEMOCAP
+## Usage
+### Train Model(Because of 5 fold CV, need to train 5 model)
+*    python CRF_train.py -n 1
+*    python CRF_train.py -n 2
+*    python CRF_train.py -n 3
+*    python CRF_train.py -n 4
+*    python CRF_train.py -n 5
+*    This 5 models would be saved in `model/` dir
+
+### Test Model UAR & ACC
+*    python CRF_test.py
 
 ## Some other toolkits or resources can implement CRF
 *    [CRF++](https://taku910.github.io/crfpp/)(Yet Another CRF toolkit)
