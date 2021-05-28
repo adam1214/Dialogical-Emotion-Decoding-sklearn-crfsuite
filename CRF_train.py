@@ -15,6 +15,7 @@ from sklearn.metrics import make_scorer
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.model_selection import cross_val_score, GridSearchCV
+from sklearn.model_selection import PredefinedSplit
 import sklearn_crfsuite
 from sklearn_crfsuite import scorers
 from sklearn_crfsuite import metrics
@@ -82,22 +83,22 @@ def construct_train_test(emo_dict, dialogs_edit):
                 Ses04_list[len(Ses04_list)-1].append((utt, spk, emo))
             elif Ses_num == 'Ses05':
                 Ses05_list[len(Ses05_list)-1].append((utt, spk, emo))
-    train_dialogs1 = Ses02_list + Ses03_list + Ses04_list + Ses05_list
+    train_val_dialogs1 = Ses02_list + Ses03_list + Ses04_list + Ses05_list
     test_dialogs1 = Ses01_list
 
-    train_dialogs2 = Ses01_list + Ses03_list + Ses04_list + Ses05_list
+    train_val_dialogs2 = Ses01_list + Ses03_list + Ses04_list + Ses05_list
     test_dialogs2 = Ses02_list
 
-    train_dialogs3 = Ses01_list + Ses02_list + Ses04_list + Ses05_list
+    train_val_dialogs3 = Ses01_list + Ses02_list + Ses04_list + Ses05_list
     test_dialogs3 = Ses03_list
 
-    train_dialogs4 = Ses01_list + Ses02_list + Ses03_list + Ses05_list
+    train_val_dialogs4 = Ses01_list + Ses02_list + Ses03_list + Ses05_list
     test_dialogs4 = Ses04_list
 
-    train_dialogs5 = Ses01_list + Ses02_list + Ses03_list + Ses04_list
+    train_val_dialogs5 = Ses01_list + Ses02_list + Ses03_list + Ses04_list
     test_dialogs5 = Ses05_list
 
-    return train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5
+    return train_val_dialogs1, train_val_dialogs2, train_val_dialogs3, train_val_dialogs4, train_val_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5, Ses01_list, Ses02_list, Ses03_list, Ses04_list, Ses05_list
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
@@ -111,23 +112,57 @@ if __name__ == "__main__":
     dialogs_edit = joblib.load('data/dialog_4emo_iemocap.pkl')
     out_dict = joblib.load('data/outputs.pkl')
 
-    train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5 = construct_train_test(emo_dict, dialogs_edit)
+    train_val_dialogs1, train_val_dialogs2, train_val_dialogs3, train_val_dialogs4, train_val_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5, Ses01_list, Ses02_list, Ses03_list, Ses04_list, Ses05_list = construct_train_test(emo_dict, dialogs_edit)
     if args.model_num == 1:
-        X_train = [dialog2features(s) for s in train_dialogs1]
-        y_train = [dialog2labels(s) for s in train_dialogs1]
+        X_train_val = [dialog2features(s) for s in train_val_dialogs1]
+        y_train_val = [dialog2labels(s) for s in train_val_dialogs1]
+        
+        # Create a list where train data indices are -1 and validation data indices are 0
+        # train + val: 2, 3, 4, 5
+        # train ses: 3, 4, 5
+        # val ses: 2
+        split_index = np.ones(len(X_train_val)) * (-1)
+        split_index[:len(Ses02_list)] = 0
     elif args.model_num == 2:
-        X_train = [dialog2features(s) for s in train_dialogs2]
-        y_train = [dialog2labels(s) for s in train_dialogs2]
+        X_train_val = [dialog2features(s) for s in train_val_dialogs2]
+        y_train_val = [dialog2labels(s) for s in train_val_dialogs2]
+        
+        # Create a list where train data indices are -1 and validation data indices are 0
+        # train + val: 1, 3, 4, 5
+        # train ses: 1, 4, 5
+        # val ses: 3
+        split_index = np.ones(len(X_train_val)) * (-1)
+        split_index[len(Ses01_list):len(Ses01_list+Ses03_list)] = 0
     elif args.model_num == 3:
-        X_train = [dialog2features(s) for s in train_dialogs3]
-        y_train = [dialog2labels(s) for s in train_dialogs3]
+        X_train_val = [dialog2features(s) for s in train_val_dialogs3]
+        y_train_val = [dialog2labels(s) for s in train_val_dialogs3]
+        
+        # Create a list where train data indices are -1 and validation data indices are 0
+        # train + val: 1, 2, 4, 5
+        # train ses: 1, 2, 5
+        # val ses: 4
+        split_index = np.ones(len(X_train_val)) * (-1)
+        split_index[len(Ses01_list+Ses02_list):len(Ses01_list+Ses02_list+Ses04_list)] = 0
     elif args.model_num == 4:
-        X_train = [dialog2features(s) for s in train_dialogs4]
-        y_train = [dialog2labels(s) for s in train_dialogs4]
+        X_train_val = [dialog2features(s) for s in train_val_dialogs4]
+        y_train_val = [dialog2labels(s) for s in train_val_dialogs4]
+        
+        # Create a list where train data indices are -1 and validation data indices are 0
+        # train + val: 1, 2, 3, 5
+        # train ses: 1, 2, 3
+        # val ses: 5
+        split_index = np.ones(len(X_train_val)) * (-1)
+        split_index[len(Ses01_list+Ses02_list+Ses03_list):] = 0
     elif args.model_num == 5:
-        X_train = [dialog2features(s) for s in train_dialogs5]
-        y_train = [dialog2labels(s) for s in train_dialogs5]
-
+        X_train_val = [dialog2features(s) for s in train_val_dialogs5]
+        y_train_val = [dialog2labels(s) for s in train_val_dialogs5]
+        
+        # Create a list where train data indices are -1 and validation data indices are 0
+        # train + val: 1, 2, 3, 4
+        # train ses: 2, 3, 4
+        # val ses: 1
+        split_index = np.ones(len(X_train_val)) * (-1)
+        split_index[:len(Ses01_list)] = 0
     # parameters
     # c2: default = 1.0
     # max_iterations: default=1000
@@ -153,9 +188,11 @@ if __name__ == "__main__":
     }
     # use the same metric for evaluation
     scorer = make_scorer(metrics.flat_recall_score, average='macro', labels=['ang', 'hap', 'neu', 'sad'])
-    s_CV = RandomizedSearchCV(crf, params_space, cv=5, verbose=1, n_jobs=-1, n_iter=15000, scoring=scorer, refit=True, random_state=0)
+    ps = PredefinedSplit(test_fold=split_index)
+    
+    s_CV = RandomizedSearchCV(crf, params_space, cv=ps, verbose=1, n_jobs=-1, n_iter=10, scoring=scorer, refit=True, random_state=0)
     #s_CV = GridSearchCV(crf, params_space, cv=5, verbose=1, n_jobs=-1, scoring=scorer)
-    s_CV.fit(X_train, y_train)
+    s_CV.fit(X_train_val, y_train_val)
     crf = s_CV.best_estimator_
 
     joblib.dump(crf, 'model/Ses0'+str(args.model_num)+'.model')
