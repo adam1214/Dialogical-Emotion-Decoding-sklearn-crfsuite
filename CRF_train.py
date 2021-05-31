@@ -190,7 +190,7 @@ if __name__ == "__main__":
     scorer = make_scorer(metrics.flat_recall_score, average='macro', labels=['ang', 'hap', 'neu', 'sad'])
     ps = PredefinedSplit(test_fold=split_index)
     
-    s_CV = RandomizedSearchCV(crf, params_space, cv=ps, verbose=1, n_jobs=-1, n_iter=2500, scoring=scorer, refit=True, random_state=0)
+    s_CV = RandomizedSearchCV(crf, params_space, cv=ps, verbose=1, n_jobs=-1, n_iter=10, scoring=scorer, refit=True, random_state=0)
     #s_CV = GridSearchCV(crf, params_space, cv=5, verbose=1, n_jobs=-1, scoring=scorer)
     s_CV.fit(X_train_val, y_train_val)
     crf = s_CV.best_estimator_
