@@ -16,10 +16,12 @@ from sklearn_crfsuite import metrics
 from collections import Counter
 
 import utils
+import random
 
 plt.style.use('ggplot')\
 
 np.random.seed(1)
+random.seed(1)
 
 def print_state_features(state_features):
     for (attr, label), weight in state_features:
@@ -56,27 +58,47 @@ def construct_train_test(emo_dict, dialogs_edit):
         Ses_num = dialog[0][:5]
         if Ses_num == 'Ses01':
             Ses01_list.append([])
+            Ses01_list.append([])
         elif Ses_num == 'Ses02':
+            Ses02_list.append([])
             Ses02_list.append([])
         elif Ses_num == 'Ses03':
             Ses03_list.append([])
+            Ses03_list.append([])
         elif Ses_num == 'Ses04':
             Ses04_list.append([])
+            Ses04_list.append([])
         elif Ses_num == 'Ses05':
+            Ses05_list.append([])
             Ses05_list.append([])
         for utt in dialog:
             spk = utt[-4]
             emo = emo_dict[utt]
             if Ses_num == 'Ses01':
-                Ses01_list[len(Ses01_list)-1].append((utt, spk, emo))
+                if spk == 'F':
+                    Ses01_list[len(Ses01_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses01_list[len(Ses01_list)-1].append((utt, spk, emo))
             elif Ses_num == 'Ses02':
-                Ses02_list[len(Ses02_list)-1].append((utt, spk, emo))
+                if spk == 'F':
+                    Ses02_list[len(Ses02_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses02_list[len(Ses02_list)-1].append((utt, spk, emo))
             elif Ses_num == 'Ses03':
-                Ses03_list[len(Ses03_list)-1].append((utt, spk, emo))
+                if spk == 'F':
+                    Ses03_list[len(Ses03_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses03_list[len(Ses03_list)-1].append((utt, spk, emo))
             elif Ses_num == 'Ses04':
-                Ses04_list[len(Ses04_list)-1].append((utt, spk, emo))
+                if spk == 'F':
+                    Ses04_list[len(Ses04_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses04_list[len(Ses04_list)-1].append((utt, spk, emo))
             elif Ses_num == 'Ses05':
-                Ses05_list[len(Ses05_list)-1].append((utt, spk, emo))
+                if spk == 'F':
+                    Ses05_list[len(Ses05_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses05_list[len(Ses05_list)-1].append((utt, spk, emo))
     train_dialogs1 = Ses02_list + Ses03_list + Ses04_list + Ses05_list
     test_dialogs1 = Ses01_list
 
@@ -96,10 +118,10 @@ def construct_train_test(emo_dict, dialogs_edit):
 
 if __name__ == "__main__":
     emo_mapping_dict = {'ang':'a', 'hap':'h', 'neu':'n', 'sad':'s', 'Start':'Start', 'End':'End', 'pre-trained':'p', 0:'ang', 1:'hap', 2:'neu', 3:'sad'}
-    emo_dict = joblib.load('data/emo_all_iemocap.pkl')
-    dialogs = joblib.load('data/dialog_iemocap.pkl')
-    dialogs_edit = joblib.load('data/dialog_4emo_iemocap.pkl')
-    out_dict = joblib.load('data/outputs.pkl')
+    emo_dict = joblib.load('../data/emo_all_iemocap.pkl')
+    dialogs = joblib.load('../data/dialog_iemocap.pkl')
+    dialogs_edit = joblib.load('../data/dialog_4emo_iemocap.pkl')
+    out_dict = joblib.load('../data/outputs.pkl')
 
     intra_emo_trans_prob_dict = utils.get_val_emo_trans_prob(emo_dict, dialogs_edit)
 
@@ -128,42 +150,56 @@ if __name__ == "__main__":
     y3_test = [dialog2labels(s) for s in test_dialogs3]
     y4_test = [dialog2labels(s) for s in test_dialogs4]
     y5_test = [dialog2labels(s) for s in test_dialogs5]
-
+    
     predict = []
     
-    crf1 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=0.5, max_iterations=1000)
+    crf1 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=50)
     crf1.fit(X1_train, y1_train)
     y1_pred = crf1.predict(X1_test)
     for sub_list in y1_pred:
         predict += sub_list
 
-    crf2 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=0.5, max_iterations=1000)
+    crf2 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=50)
     crf2.fit(X2_train, y2_train)
     y2_pred = crf2.predict(X2_test)
     for sub_list in y2_pred:
         predict += sub_list
 
-    crf3 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=0.5, max_iterations=1000)
+    crf3 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=50)
     crf3.fit(X3_train, y3_train)
     y3_pred = crf3.predict(X3_test)
     for sub_list in y3_pred:
         predict += sub_list
 
-    crf4 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=0.5, max_iterations=1000)
+    crf4 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=50)
     crf4.fit(X4_train, y4_train)
     y4_pred = crf4.predict(X4_test)
     for sub_list in y4_pred:
         predict += sub_list
 
-    crf5 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=0.5, max_iterations=1000)
+    crf5 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=50)
     crf5.fit(X5_train, y5_train)
     y5_pred = crf5.predict(X5_test)
     for sub_list in y5_pred:
         predict += sub_list
 
     label = []
-    for _, dia in enumerate(dialogs):
-        label += [utils.convert_to_index(emo_dict[utt]) for utt in dialogs[dia]]
+    for dia_list in test_dialogs1:
+        for utt in dia_list:
+            label.append(utt[2])
+    for dia_list in test_dialogs2:
+        for utt in dia_list:
+            label.append(utt[2])
+    for dia_list in test_dialogs3:
+        for utt in dia_list:
+            label.append(utt[2])
+    for dia_list in test_dialogs4:
+        for utt in dia_list:
+            label.append(utt[2])
+    for dia_list in test_dialogs5:
+        for utt in dia_list:
+            label.append(utt[2])
+    
     
     for i in range(0, len(predict), 1):
         if predict[i] == 'ang':
@@ -174,11 +210,21 @@ if __name__ == "__main__":
             predict[i] = 2
         elif predict[i] == 'sad':
             predict[i] = 3
-    
+        
+        if label[i] == 'ang':
+            label[i] = 0
+        elif label[i] == 'hap':
+            label[i] = 1
+        elif label[i] == 'neu':
+            label[i] = 2
+        elif label[i] == 'sad':
+            label[i] = 3
+        
     uar, acc, conf = utils.evaluate(predict, label)
     print('UAR:', uar)
     print('ACC:', acc)
     print(conf)
+    
     '''
     print('===================================================') 
     print("Top likely transitions:") # transition feature coefficients {(label_from, label_to) -- coef}
