@@ -14,7 +14,10 @@ def evaluate(predict, label): #uar, acc, conf = utils.evaluate(predict, label)
     label, predict = np.array(label), np.array(predict)
     index = [label != -1]
     label = label[tuple(index)]
-
+    if len(predict) == 10039:
+        predict = predict[tuple(index)]
+    print(len(predict))
+    print(len(label))
     return recall_score(label, predict, average='macro'), accuracy_score(label, predict), confusion_matrix(label, predict)
 
 def split_dialog(dialogs):

@@ -209,18 +209,30 @@ def construct_train_test(emo_dict, dialogs_edit):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
     parser.add_argument("-l", "--data_len", type=int, help="how many utts per data?", default = 17)
+    parser.add_argument("-d", "--dataset", type=str, help="which dataset to use? original or C2C or U2U", default = 'original')
     args = parser.parse_args()
     
     emo_mapping_dict = {'ang':'a', 'hap':'h', 'neu':'n', 'sad':'s', 'Start':'Start', 'End':'End', 'pre-trained':'p', 0:'ang', 1:'hap', 2:'neu', 3:'sad'}
     map_emo = {'ang':0, 'hap':1, 'neu':2, 'sad':3}
     emo_dict = joblib.load('../data/emo_all_iemocap.pkl')
+    
+    if args.dataset == 'original':
+        emo_dict = joblib.load('../data/emo_all_iemocap.pkl')
+    elif args.dataset == 'C2C':
+        emo_dict = joblib.load('../data/C2C_4emo_all_iemocap.pkl')
+    elif args.dataset == 'U2U':
+        emo_dict = joblib.load('../data/U2U_4emo_all_iemocap.pkl')
+
     dialogs = joblib.load('../data/dialog_iemocap.pkl')
     dialogs_edit = joblib.load('../data/dialog_4emo_iemocap.pkl')
     out_dict = joblib.load('../data/outputs.pkl')
 
-    intra_emo_trans_prob_dict = utils.get_val_emo_trans_prob(emo_dict, dialogs_edit)
-
-    train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5 = construct_train_test(emo_dict, dialogs_edit)
+    #intra_emo_trans_prob_dict = utils.get_val_emo_trans_prob(emo_dict, dialogs_edit)
+    
+    if args.dataset == 'original':
+        train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5 = construct_train_test(emo_dict, dialogs_edit)
+    else:
+        train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5 = construct_train_test(emo_dict, dialogs)
     
     X1_train = [dialog2features(s) for s in train_dialogs1]
     X2_train = [dialog2features(s) for s in train_dialogs2]
@@ -283,11 +295,24 @@ if __name__ == "__main__":
         for j in range(0, args.data_len, 1):
             predict_dict[test_dialogs5[i][j][0]] = y5_pred[i][j]
 
+    ori_emo_dict = joblib.load('../data/emo_all_iemocap.pkl')    
     label = []
     predict = []
     for utt_name in predict_dict:
         predict.append(map_emo[predict_dict[utt_name]])
-        label.append(map_emo[emo_dict[utt_name]])
+        label.append(ori_emo_dict[utt_name])
+    
+    for i in range(0, len(label), 1):
+        if label[i] == 'ang':
+            label[i] = 0
+        elif label[i] == 'hap':
+            label[i] = 1
+        elif label[i] == 'neu':
+            label[i] = 2
+        elif label[i] == 'sad':
+            label[i] = 3
+        else:
+            label[i] = -1
     
     uar, acc, conf = utils.evaluate(predict, label)
     print('UAR:', uar)

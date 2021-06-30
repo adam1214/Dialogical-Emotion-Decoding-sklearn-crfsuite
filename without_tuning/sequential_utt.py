@@ -51,14 +51,14 @@ def dialog2features(dialog):
 def dialog2labels(dialog):
     return [emo for utt, spk, emo in dialog]
 
-def construct_train_test(emo_dict, dialogs_edit):
+def construct_train_test(emo_dict, dias):
     Ses01_list = []
     Ses02_list = []
     Ses03_list = []
     Ses04_list = []
     Ses05_list = []
     
-    for dialog in dialogs_edit.values():
+    for dialog in dias.values():
         Ses_num = dialog[0][:5]
         if Ses_num == 'Ses01':
             Ses01_list.append([])
@@ -103,16 +103,25 @@ def construct_train_test(emo_dict, dialogs_edit):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
     parser.add_argument("-c", "--c2", type=float, help="C2 value of l2sgd", default = 0.3)
+    parser.add_argument("-d", "--dataset", type=str, help="which dataset to use? original or C2C or U2U", default = 'C2C')
     args = parser.parse_args()
+    
     emo_mapping_dict = {'ang':'a', 'hap':'h', 'neu':'n', 'sad':'s', 'Start':'Start', 'End':'End', 'pre-trained':'p', 0:'ang', 1:'hap', 2:'neu', 3:'sad'}
-    emo_dict = joblib.load('../data/emo_all_iemocap.pkl')
+    if args.dataset == 'original':
+        emo_dict = joblib.load('../data/emo_all_iemocap.pkl')
+    elif args.dataset == 'C2C':
+        emo_dict = joblib.load('../data/C2C_4emo_all_iemocap.pkl')
+    elif args.dataset == 'U2U':
+        emo_dict = joblib.load('../data/U2U_4emo_all_iemocap.pkl')
     dialogs = joblib.load('../data/dialog_iemocap.pkl')
     dialogs_edit = joblib.load('../data/dialog_4emo_iemocap.pkl')
     out_dict = joblib.load('../data/outputs.pkl')
 
-    intra_emo_trans_prob_dict = utils.get_val_emo_trans_prob(emo_dict, dialogs_edit)
-
-    train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5 = construct_train_test(emo_dict, dialogs_edit)
+    #intra_emo_trans_prob_dict = utils.get_val_emo_trans_prob(emo_dict, dialogs_edit)
+    if args.dataset == 'original':
+        train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5 = construct_train_test(emo_dict, dialogs_edit)
+    else:
+        train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5 = construct_train_test(emo_dict, dialogs)
 
     X1_train = [dialog2features(s) for s in train_dialogs1]
     X2_train = [dialog2features(s) for s in train_dialogs2]
@@ -170,9 +179,10 @@ if __name__ == "__main__":
     for sub_list in y5_pred:
         predict += sub_list
 
+    ori_emo_dict = joblib.load('../data/emo_all_iemocap.pkl')
     label = []
     for _, dia in enumerate(dialogs):
-        label += [utils.convert_to_index(emo_dict[utt]) for utt in dialogs[dia]]
+        label += [utils.convert_to_index(ori_emo_dict[utt]) for utt in dialogs[dia]]
     
     for i in range(0, len(predict), 1):
         if predict[i] == 'ang':
