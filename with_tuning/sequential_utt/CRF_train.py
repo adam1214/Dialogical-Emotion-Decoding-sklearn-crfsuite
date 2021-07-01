@@ -104,6 +104,39 @@ def construct_train_test(emo_dict, dialogs_edit):
 
     return train_val_dialogs1, train_val_dialogs2, train_val_dialogs3, train_val_dialogs4, train_val_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5, Ses01_list, Ses02_list, Ses03_list, Ses04_list, Ses05_list
 
+def my_custom_score(y_true, y_pred):
+    predict_val = []
+    true_val = []
+    for sub_list in y_pred:
+        predict_val += sub_list
+    
+    for sub_list in y_true:
+        true_val += sub_list
+    
+    for i in range(0, len(predict_val), 1):
+        if predict_val[i] == 'ang':
+            predict_val[i] = 0
+        elif predict_val[i] == 'hap':
+            predict_val[i] = 1
+        elif predict_val[i] == 'neu':
+            predict_val[i] = 2
+        elif predict_val[i] == 'sad':
+            predict_val[i] = 3
+        
+        if true_val[i] == 'ang':
+            true_val[i] = 0
+        elif true_val[i] == 'hap':
+            true_val[i] = 1
+        elif true_val[i] == 'neu':
+            true_val[i] = 2
+        elif true_val[i] == 'sad':
+            true_val[i] = 3
+        else:
+            true_val[i] = -1
+        
+    uar, acc, conf = utils.evaluate(predict_val, true_val)
+    return uar
+        
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
     parser.add_argument("-n", "--model_num", type=int, help="which model number you want to train?", default=1)
@@ -189,7 +222,7 @@ if __name__ == "__main__":
         'max_linesearch': range(10, 101, 3)
     }
     # use the same metric for evaluation
-    scorer = make_scorer(metrics.flat_recall_score, average='macro', labels=['ang', 'hap', 'neu', 'sad'])
+    scorer = make_scorer(my_custom_score, greater_is_better=True)
     ps = PredefinedSplit(test_fold=split_index)
     
     s_CV = RandomizedSearchCV(crf, params_space, cv=ps, verbose=1, n_jobs=-1, n_iter=10, scoring=scorer, refit=True, random_state=0)
