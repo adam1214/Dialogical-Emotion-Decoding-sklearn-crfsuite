@@ -68,10 +68,10 @@ def dialog2labels(dialog):
     return [emo for utt, spk, emo in dialog]
 
 if __name__ == "__main__":
-    emo_dict = joblib.load('data/emo_all_iemocap.pkl')
-    dialogs = joblib.load('data/dialog_iemocap.pkl')
-    dialogs_edit = joblib.load('data/dialog_4emo_iemocap.pkl')
-    out_dict = joblib.load('data/outputs.pkl')
+    emo_dict = joblib.load('../../data/emo_all_iemocap.pkl')
+    dialogs = joblib.load('../../data/dialog_iemocap.pkl')
+    dialogs_edit = joblib.load('../../data/dialog_4emo_iemocap.pkl')
+    out_dict = joblib.load('../../data/outputs.pkl')
 
     train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5 = construct_train_test(emo_dict, dialogs_edit)
     X1_test = [dialog2features(s) for s in test_dialogs1]
@@ -131,4 +131,3 @@ if __name__ == "__main__":
     print('UAR:', uar)
     print('ACC:', acc)
     print(conf)
-    

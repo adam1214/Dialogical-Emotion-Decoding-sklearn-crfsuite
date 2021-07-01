@@ -103,7 +103,7 @@ def construct_train_test(emo_dict, dias):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
     parser.add_argument("-c", "--c2", type=float, help="C2 value of l2sgd", default = 0.3)
-    parser.add_argument("-d", "--dataset", type=str, help="which dataset to use? original or C2C or U2U", default = 'C2C')
+    parser.add_argument("-d", "--dataset", type=str, help="which dataset to use? original or C2C or U2U", default = 'original')
     args = parser.parse_args()
     
     emo_mapping_dict = {'ang':'a', 'hap':'h', 'neu':'n', 'sad':'s', 'Start':'Start', 'End':'End', 'pre-trained':'p', 0:'ang', 1:'hap', 2:'neu', 3:'sad'}
@@ -149,31 +149,31 @@ if __name__ == "__main__":
 
     predict = []
     
-    crf1 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=args.c2)
+    crf1 = sklearn_crfsuite.CRF(algorithm='lbfgs', c2=args.c2)
     crf1.fit(X1_train, y1_train)
     y1_pred = crf1.predict(X1_test)
     for sub_list in y1_pred:
         predict += sub_list
     
-    crf2 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=args.c2)
+    crf2 = sklearn_crfsuite.CRF(algorithm='lbfgs', c2=args.c2)
     crf2.fit(X2_train, y2_train)
     y2_pred = crf2.predict(X2_test)
     for sub_list in y2_pred:
         predict += sub_list
 
-    crf3 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=args.c2)
+    crf3 = sklearn_crfsuite.CRF(algorithm='lbfgs', c2=args.c2)
     crf3.fit(X3_train, y3_train)
     y3_pred = crf3.predict(X3_test)
     for sub_list in y3_pred:
         predict += sub_list
 
-    crf4 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=args.c2)
+    crf4 = sklearn_crfsuite.CRF(algorithm='lbfgs', c2=args.c2)
     crf4.fit(X4_train, y4_train)
     y4_pred = crf4.predict(X4_test)
     for sub_list in y4_pred:
         predict += sub_list
 
-    crf5 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=args.c2)
+    crf5 = sklearn_crfsuite.CRF(algorithm='lbfgs', c2=args.c2)
     crf5.fit(X5_train, y5_train)
     y5_pred = crf5.predict(X5_test)
     for sub_list in y5_pred:

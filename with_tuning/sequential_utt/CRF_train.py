@@ -21,11 +21,15 @@ from sklearn_crfsuite import scorers
 from sklearn_crfsuite import metrics
 from collections import Counter
 import utils
+import random
 from time import time
 import argparse
 from argparse import RawTextHelpFormatter
 
 plt.style.use('ggplot')\
+
+np.random.seed(1)
+random.seed(1)
 
 def print_state_features(state_features):
     for (attr, label), weight in state_features:
@@ -107,10 +111,10 @@ if __name__ == "__main__":
 
     start_t = time()
     emo_mapping_dict = {'ang':'a', 'hap':'h', 'neu':'n', 'sad':'s', 'Start':'Start', 'End':'End', 'pre-trained':'p', 0:'ang', 1:'hap', 2:'neu', 3:'sad'}
-    emo_dict = joblib.load('data/emo_all_iemocap.pkl')
-    dialogs = joblib.load('data/dialog_iemocap.pkl')
-    dialogs_edit = joblib.load('data/dialog_4emo_iemocap.pkl')
-    out_dict = joblib.load('data/outputs.pkl')
+    emo_dict = joblib.load('../../data/emo_all_iemocap.pkl')
+    dialogs = joblib.load('../../data/dialog_iemocap.pkl')
+    dialogs_edit = joblib.load('../../data/dialog_4emo_iemocap.pkl')
+    out_dict = joblib.load('../../data/outputs.pkl')
 
     train_val_dialogs1, train_val_dialogs2, train_val_dialogs3, train_val_dialogs4, train_val_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5, Ses01_list, Ses02_list, Ses03_list, Ses04_list, Ses05_list = construct_train_test(emo_dict, dialogs_edit)
     if args.model_num == 1:
@@ -164,27 +168,25 @@ if __name__ == "__main__":
         split_index[len(Ses01_list+Ses02_list):len(Ses01_list+Ses02_list+Ses03_list)] = 2
         split_index[len(Ses01_list+Ses02_list+Ses03_list):] = 3
     # parameters
+    # c1: default = 0.0
     # c2: default = 1.0
-    # max_iterations: default=1000
-    # period:The duration of iterations to test the stopping criterion. default = 10
-    # delta:The threshold for the stopping criterion; an iteration stops when the improvement of the log likelihood over the last period iterations is no greater than this threshold. default = 1e-5
-    # calibration_eta:The initial value of learning rate (eta) used for calibration. default=0.1
-    # calibration_rate:The rate of increase/decrease of learning rate for calibration. default=2.0
-    # calibration_samples:The number of instances used for calibration. The calibration routine randomly chooses instances no larger than calibration_samples. default=1000
-    # calibration_candidates:The number of candidates of learning rate. The calibration routine terminates after finding calibration_samples candidates of learning rates that can increase log-likelihood. default=10
-    # calibration_max_trials:The maximum number of trials of learning rates for calibration. The calibration routine terminates after trying calibration_max_trials candidate values of learning rates. default=20
-    
-    crf = sklearn_crfsuite.CRF(algorithm='l2sgd') 
+    # max_iterations: default=unlimited
+    # num_memories: default=6
+    # epsilon: default=1e-5
+    # period: default=10
+    # delta: default=1e-5
+    # linesearch: default='MoreThuente'
+    # max_linesearch: default=20
+    crf = sklearn_crfsuite.CRF(algorithm='lbfgs') 
     params_space = {
-        'c2': np.linspace(start = 0.01, stop = 1,  endpoint=True, num = 10),
-        'max_iterations': range(800, 1201, 100),
-        'period': range(8, 13, 1),
-        'delta': np.linspace(start = 0.000001, stop = 0.0001,  endpoint = True, num = 20),
-        'calibration_eta': np.linspace(start = 0.001, stop = 0.1,  endpoint = True, num = 20),
-        'calibration_rate': np.linspace(start = 1.0, stop = 5.0,  endpoint = True, num = 5),
-        'calibration_samples': [800, 1000, 1200, 1400],
-        'calibration_candidates': [5, 10, 15, 20, 25],
-        'calibration_max_trials': [10, 15, 20, 25]
+        'c1': np.linspace(start = 0.01, stop = 50,  endpoint=True, num = 25),
+        'c2': np.linspace(start = 0.01, stop = 50,  endpoint=True, num = 25),
+        'num_memories': [1,2,3,4,5,6,7,8,9,10],
+        'epsilon': np.linspace(start = 1e-6, stop = 1e-3, endpoint=True, num = 25),
+        'period': range(1, 21, 3),
+        'delta': np.linspace(start = 1e-6, stop = 1e-4,  endpoint=True, num = 20),
+        'linesearch': ['MoreThuente', 'Backtracking', 'StrongBacktracking'],
+        'max_linesearch': range(10, 101, 3)
     }
     # use the same metric for evaluation
     scorer = make_scorer(metrics.flat_recall_score, average='macro', labels=['ang', 'hap', 'neu', 'sad'])
@@ -201,15 +203,6 @@ if __name__ == "__main__":
     print('Process time:', dur, 'min')
 
     print('Best score for training data:', s_CV.best_score_)
-    print('Best c2:', s_CV.best_estimator_.c2)
-    print('Best max_iterations', s_CV.best_estimator_.max_iterations)
-    print('Best period:', s_CV.best_estimator_.period) 
-    print('Best delta:', s_CV.best_estimator_.delta)
-    print('Best calibration_eta', s_CV.best_estimator_.calibration_eta)
-    print('Best calibration_rate', s_CV.best_estimator_.calibration_rate)
-    print('Best calibration_samples', s_CV.best_estimator_.calibration_samples)
-    print('Best calibration_candidates', s_CV.best_estimator_.calibration_candidates)
-    print('Best calibration_max_trials', s_CV.best_estimator_.calibration_max_trials)
     
     '''
     print('===================================================') 
@@ -218,5 +211,4 @@ if __name__ == "__main__":
     print('===================================================')
     print("Top positive:") # state feature coefficients {(attr_name, label) -- coef}
     print_state_features(Counter(crf.state_features_).most_common(len(crf.state_features_)))
-    
     '''
