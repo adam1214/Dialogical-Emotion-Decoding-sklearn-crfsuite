@@ -214,7 +214,6 @@ if __name__ == "__main__":
     
     emo_mapping_dict = {'ang':'a', 'hap':'h', 'neu':'n', 'sad':'s', 'Start':'Start', 'End':'End', 'pre-trained':'p', 0:'ang', 1:'hap', 2:'neu', 3:'sad'}
     map_emo = {'ang':0, 'hap':1, 'neu':2, 'sad':3}
-    emo_dict = joblib.load('../data/emo_all_iemocap.pkl')
     
     if args.dataset == 'original':
         emo_dict = joblib.load('../data/emo_all_iemocap.pkl')
