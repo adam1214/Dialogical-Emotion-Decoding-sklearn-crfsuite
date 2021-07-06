@@ -42,7 +42,6 @@ def utt2features(dialog, i):
         'pretrained_n':out_dict[dialog[i][0]][2],
         'pretrained_s':out_dict[dialog[i][0]][3]
     }
-    
     return features
 
 def dialog2features(dialog):
@@ -62,27 +61,47 @@ def construct_train_test(emo_dict, dias):
         Ses_num = dialog[0][:5]
         if Ses_num == 'Ses01':
             Ses01_list.append([])
+            Ses01_list.append([])
         elif Ses_num == 'Ses02':
+            Ses02_list.append([])
             Ses02_list.append([])
         elif Ses_num == 'Ses03':
             Ses03_list.append([])
+            Ses03_list.append([])
         elif Ses_num == 'Ses04':
             Ses04_list.append([])
+            Ses04_list.append([])
         elif Ses_num == 'Ses05':
+            Ses05_list.append([])
             Ses05_list.append([])
         for utt in dialog:
             spk = utt[-4]
             emo = emo_dict[utt]
             if Ses_num == 'Ses01':
-                Ses01_list[len(Ses01_list)-1].append((utt, spk, emo))
+                if spk == 'F':
+                    Ses01_list[len(Ses01_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses01_list[len(Ses01_list)-1].append((utt, spk, emo))
             elif Ses_num == 'Ses02':
-                Ses02_list[len(Ses02_list)-1].append((utt, spk, emo))
+                if spk == 'F':
+                    Ses02_list[len(Ses02_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses02_list[len(Ses02_list)-1].append((utt, spk, emo))
             elif Ses_num == 'Ses03':
-                Ses03_list[len(Ses03_list)-1].append((utt, spk, emo))
+                if spk == 'F':
+                    Ses03_list[len(Ses03_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses03_list[len(Ses03_list)-1].append((utt, spk, emo))
             elif Ses_num == 'Ses04':
-                Ses04_list[len(Ses04_list)-1].append((utt, spk, emo))
+                if spk == 'F':
+                    Ses04_list[len(Ses04_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses04_list[len(Ses04_list)-1].append((utt, spk, emo))
             elif Ses_num == 'Ses05':
-                Ses05_list[len(Ses05_list)-1].append((utt, spk, emo))
+                if spk == 'F':
+                    Ses05_list[len(Ses05_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses05_list[len(Ses05_list)-1].append((utt, spk, emo))
     train_dialogs1 = Ses02_list + Ses03_list + Ses04_list + Ses05_list
     test_dialogs1 = Ses01_list
 
@@ -102,22 +121,24 @@ def construct_train_test(emo_dict, dias):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
-    parser.add_argument("-c", "--c2", type=float, help="C2 value of l2sgd", default = 0.3)
-    parser.add_argument("-d", "--dataset", type=str, help="which dataset to use? original or C2C or U2U", default = 'original')
+    parser.add_argument("-d", "--dataset", type=str, help="which dataset to use? original or C2C or U2U", default = 'U2U')
     args = parser.parse_args()
-    
+
     emo_mapping_dict = {'ang':'a', 'hap':'h', 'neu':'n', 'sad':'s', 'Start':'Start', 'End':'End', 'pre-trained':'p', 0:'ang', 1:'hap', 2:'neu', 3:'sad'}
+    
     if args.dataset == 'original':
-        emo_dict = joblib.load('../data/emo_all_iemocap.pkl')
+        emo_dict = joblib.load('../../data/emo_all_iemocap.pkl')
     elif args.dataset == 'C2C':
-        emo_dict = joblib.load('../data/C2C_4emo_all_iemocap.pkl')
+        emo_dict = joblib.load('../../data/C2C_4emo_all_iemocap.pkl')
     elif args.dataset == 'U2U':
-        emo_dict = joblib.load('../data/U2U_4emo_all_iemocap.pkl')
-    dialogs = joblib.load('../data/dialog_iemocap.pkl')
-    dialogs_edit = joblib.load('../data/dialog_4emo_iemocap.pkl')
-    out_dict = joblib.load('../data/outputs.pkl')
+        emo_dict = joblib.load('../../data/U2U_4emo_all_iemocap.pkl')
+    
+    dialogs = joblib.load('../../data/dialog_iemocap.pkl')
+    dialogs_edit = joblib.load('../../data/dialog_4emo_iemocap.pkl')
+    out_dict = joblib.load('../../data/outputs.pkl')
 
     #intra_emo_trans_prob_dict = utils.get_val_emo_trans_prob(emo_dict, dialogs_edit)
+
     if args.dataset == 'original':
         train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5 = construct_train_test(emo_dict, dialogs_edit)
     else:
@@ -146,44 +167,46 @@ if __name__ == "__main__":
     y3_test = [dialog2labels(s) for s in test_dialogs3]
     y4_test = [dialog2labels(s) for s in test_dialogs4]
     y5_test = [dialog2labels(s) for s in test_dialogs5]
-
-    predict = []
     
-    crf1 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=args.c2)
-    crf1.fit(X1_train, y1_train)
+    predict_dict = {}
+    crf1 = joblib.load('model/' + args.dataset + '/Ses01.model')
+    crf2 = joblib.load('model/' + args.dataset + '/Ses02.model')
+    crf3 = joblib.load('model/' + args.dataset + '/Ses03.model')
+    crf4 = joblib.load('model/' + args.dataset + '/Ses04.model')
+    crf5 = joblib.load('model/' + args.dataset + '/Ses05.model')
+
     y1_pred = crf1.predict(X1_test)
-    for sub_list in y1_pred:
-        predict += sub_list
-    
-    crf2 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=args.c2)
-    crf2.fit(X2_train, y2_train)
+    for i in range(0, len(y1_pred), 1):
+        for j in range(0, len(y1_pred[i]), 1):
+            predict_dict[test_dialogs1[i][j][0]] = y1_pred[i][j]
+
     y2_pred = crf2.predict(X2_test)
-    for sub_list in y2_pred:
-        predict += sub_list
+    for i in range(0, len(y2_pred), 1):
+        for j in range(0, len(y2_pred[i]), 1):
+            predict_dict[test_dialogs2[i][j][0]] = y2_pred[i][j]
 
-    crf3 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=args.c2)
-    crf3.fit(X3_train, y3_train)
     y3_pred = crf3.predict(X3_test)
-    for sub_list in y3_pred:
-        predict += sub_list
+    for i in range(0, len(y3_pred), 1):
+        for j in range(0, len(y3_pred[i]), 1):
+            predict_dict[test_dialogs3[i][j][0]] = y3_pred[i][j]
 
-    crf4 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=args.c2)
-    crf4.fit(X4_train, y4_train)
     y4_pred = crf4.predict(X4_test)
-    for sub_list in y4_pred:
-        predict += sub_list
+    for i in range(0, len(y4_pred), 1):
+        for j in range(0, len(y4_pred[i]), 1):
+            predict_dict[test_dialogs4[i][j][0]] = y4_pred[i][j]
 
-    crf5 = sklearn_crfsuite.CRF(algorithm='l2sgd', c2=args.c2)
-    crf5.fit(X5_train, y5_train)
     y5_pred = crf5.predict(X5_test)
-    for sub_list in y5_pred:
-        predict += sub_list
-
-    ori_emo_dict = joblib.load('../data/emo_all_iemocap.pkl')
-    label = []
-    for _, dia in enumerate(dialogs):
-        label += [utils.convert_to_index(ori_emo_dict[utt]) for utt in dialogs[dia]]
+    for i in range(0, len(y5_pred), 1):
+        for j in range(0, len(y5_pred[i]), 1):
+            predict_dict[test_dialogs5[i][j][0]] = y5_pred[i][j]
     
+    ori_emo_dict = joblib.load('../../data/emo_all_iemocap.pkl')
+    label = []
+    predict = []
+    for utt_name in predict_dict:
+        label.append(ori_emo_dict[utt_name])
+        predict.append(predict_dict[utt_name])
+
     for i in range(0, len(predict), 1):
         if predict[i] == 'ang':
             predict[i] = 0
@@ -193,8 +216,19 @@ if __name__ == "__main__":
             predict[i] = 2
         elif predict[i] == 'sad':
             predict[i] = 3
+        
+        if label[i] == 'ang':
+            label[i] = 0
+        elif label[i] == 'hap':
+            label[i] = 1
+        elif label[i] == 'neu':
+            label[i] = 2
+        elif label[i] == 'sad':
+            label[i] = 3
+        else:
+            label[i] = -1
     
-    uar, acc, conf = utils.evaluate(predict, label)
+    uar, acc, conf = utils.evaluate(predict, label, final_test=1)
     print('UAR:', uar)
     print('ACC:', acc)
     print(conf)

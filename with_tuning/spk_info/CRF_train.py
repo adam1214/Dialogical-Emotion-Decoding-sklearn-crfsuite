@@ -40,8 +40,8 @@ def print_transitions(trans_features):
         print("%-6s -> %-7s %0.6f" % (label_from, label_to, weight))
         
 def utt2features(dialog, i):
-    current_ses = dialog[i][0][:5] #Ses01
-    features = {        
+    
+    features = {
         'pretrained_a':out_dict[dialog[i][0]][0],
         'pretrained_h':out_dict[dialog[i][0]][1],
         'pretrained_n':out_dict[dialog[i][0]][2],
@@ -66,43 +66,63 @@ def construct_train_test(emo_dict, dias):
         Ses_num = dialog[0][:5]
         if Ses_num == 'Ses01':
             Ses01_list.append([])
+            Ses01_list.append([])
         elif Ses_num == 'Ses02':
+            Ses02_list.append([])
             Ses02_list.append([])
         elif Ses_num == 'Ses03':
             Ses03_list.append([])
+            Ses03_list.append([])
         elif Ses_num == 'Ses04':
             Ses04_list.append([])
+            Ses04_list.append([])
         elif Ses_num == 'Ses05':
+            Ses05_list.append([])
             Ses05_list.append([])
         for utt in dialog:
             spk = utt[-4]
             emo = emo_dict[utt]
             if Ses_num == 'Ses01':
-                Ses01_list[len(Ses01_list)-1].append((utt, spk, emo))
+                if spk == 'F':
+                    Ses01_list[len(Ses01_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses01_list[len(Ses01_list)-1].append((utt, spk, emo))
             elif Ses_num == 'Ses02':
-                Ses02_list[len(Ses02_list)-1].append((utt, spk, emo))
+                if spk == 'F':
+                    Ses02_list[len(Ses02_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses02_list[len(Ses02_list)-1].append((utt, spk, emo))
             elif Ses_num == 'Ses03':
-                Ses03_list[len(Ses03_list)-1].append((utt, spk, emo))
+                if spk == 'F':
+                    Ses03_list[len(Ses03_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses03_list[len(Ses03_list)-1].append((utt, spk, emo))
             elif Ses_num == 'Ses04':
-                Ses04_list[len(Ses04_list)-1].append((utt, spk, emo))
+                if spk == 'F':
+                    Ses04_list[len(Ses04_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses04_list[len(Ses04_list)-1].append((utt, spk, emo))
             elif Ses_num == 'Ses05':
-                Ses05_list[len(Ses05_list)-1].append((utt, spk, emo))
-    train_val_dialogs1 = Ses02_list + Ses03_list + Ses04_list + Ses05_list
+                if spk == 'F':
+                    Ses05_list[len(Ses05_list)-2].append((utt, spk, emo))
+                elif spk == 'M':
+                    Ses05_list[len(Ses05_list)-1].append((utt, spk, emo))
+    train_dialogs1 = Ses02_list + Ses03_list + Ses04_list + Ses05_list
     test_dialogs1 = Ses01_list
 
-    train_val_dialogs2 = Ses01_list + Ses03_list + Ses04_list + Ses05_list
+    train_dialogs2 = Ses01_list + Ses03_list + Ses04_list + Ses05_list
     test_dialogs2 = Ses02_list
 
-    train_val_dialogs3 = Ses01_list + Ses02_list + Ses04_list + Ses05_list
+    train_dialogs3 = Ses01_list + Ses02_list + Ses04_list + Ses05_list
     test_dialogs3 = Ses03_list
 
-    train_val_dialogs4 = Ses01_list + Ses02_list + Ses03_list + Ses05_list
+    train_dialogs4 = Ses01_list + Ses02_list + Ses03_list + Ses05_list
     test_dialogs4 = Ses04_list
 
-    train_val_dialogs5 = Ses01_list + Ses02_list + Ses03_list + Ses04_list
+    train_dialogs5 = Ses01_list + Ses02_list + Ses03_list + Ses04_list
     test_dialogs5 = Ses05_list
 
-    return train_val_dialogs1, train_val_dialogs2, train_val_dialogs3, train_val_dialogs4, train_val_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5, Ses01_list, Ses02_list, Ses03_list, Ses04_list, Ses05_list
+    return train_dialogs1, train_dialogs2, train_dialogs3, train_dialogs4, train_dialogs5, test_dialogs1, test_dialogs2, test_dialogs3, test_dialogs4, test_dialogs5, Ses01_list, Ses02_list, Ses03_list, Ses04_list, Ses05_list
 
 def my_custom_score(y_true, y_pred):
     predict_val = []
@@ -136,7 +156,7 @@ def my_custom_score(y_true, y_pred):
         
     uar, acc, conf = utils.evaluate(predict_val, true_val)
     return uar
-        
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
     parser.add_argument("-n", "--model_num", type=int, help="which model number you want to train?", default=1)
